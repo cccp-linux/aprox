@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import contextlib, fcntl, os, socket, sys, threading, time
+import contextlib, fcntl, os, socket, sys, threading
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from pathlib import Path
 from socketserver import ThreadingMixIn
@@ -51,10 +51,10 @@ class Handler(BaseHTTPRequestHandler):
         idle_timer.cancel()
 
         try:
-            path = Path(urlparse(self.path).path)
+            data = urlparse(self.path)
+            path = Path(data.path)
             if deb := (path.suffix == ".deb"):
-                hostname = urlparse(self.path).hostname
-                cache = archives / hostname / path.name
+                cache = archives / data.hostname / path.name
                 with flock(lock_file):
                     if cache.exists():
                         self.send_data(cache.read_bytes(), deb=True)
