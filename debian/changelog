@@ -1,5 +1,18 @@
-aprox (0.1) UNRELEASED; urgency=medium
+aprox (0.1) unstable; urgency=medium
 
-  * Initial release.
+  * d/rules: explicit prefix
+  * Not using aprox.conf anymore
+  * Update README
+  * Add license
+  * approx: clean-up
+  * Support custom archives path
+  * approx: hard-code archives dir and idle_timeout
+  * aprox-clean: hard-code archives dir
+  * Fix path substitution
+  * These don't need substitution
+  * Add Debian release workflow
+  * Add Debian packaging
+  * Import initial version
+  * Initial commit
 
- -- Dimitry Ishenko <dimitry.ishenko@gmail.com>  Sat, 30 May 2026 16:13:35 -0400
+ -- Dimitry Ishenko <dimitry.ishenko@gmail.com>  Sat, 30 May 2026 19:11:01 -0400
