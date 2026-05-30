@@ -1,0 +1,87 @@
+#!/usr/bin/env python3
+
+import contextlib, fcntl, os, socket, sys, threading, time
+from configparser import ConfigParser
+from http.server import HTTPServer, BaseHTTPRequestHandler
+from pathlib import Path
+from socketserver import ThreadingMixIn
+from urllib.parse import urlparse
+from urllib.request import urlopen
+
+@contextlib.contextmanager
+def flock(f):
+    fcntl.flock(f, fcntl.LOCK_EX)
+    try: yield
+    finally: fcntl.flock(f, fcntl.LOCK_UN)
+
+config = ConfigParser()
+config.read("@SYSCONFDIR@/aprox.conf")
+config = config["main"]
+
+addr, port = config["addr"], int(config["port"])
+idle_timeout = int(config["idle-timeout"])
+
+archives = Path(config["archives"])
+archives.mkdir(exist_ok=True)
+lock_file = open(archives / "lock", "w")
+
+class Handler(BaseHTTPRequestHandler):
+    def send_ok(self, deb=False, length=None):
+        self.send_response(200)
+        if deb: self.send_header("Content-Type", "application/vnd.debian.binary-package")
+        if length: self.send_header("Content-Length", length)
+        self.end_headers()
+
+    def cache_and_stream_data(self, cache):
+        cache.parent.mkdir(parents=True, exist_ok=True)
+        temp = cache.with_suffix(".partial")
+        with urlopen(self.path) as resp:
+            self.send_ok(deb=True, length=resp.headers.get("Content-Length"))
+            with open(temp, "wb") as fp:
+                try:
+                    while chunk := resp.read(65536):
+                        fp.write(chunk)
+                        self.wfile.write(chunk)
+                except: temp.unlink()
+                else: temp.rename(cache)
+
+    def send_data(self, data, deb=False):
+        self.send_ok(deb=deb, length=len(data))
+        self.wfile.write(data)
+
+    def do_GET(self):
+        global idle_timer
+        idle_timer.cancel()
+
+        try:
+            path = Path(urlparse(self.path).path)
+            if deb := (path.suffix == ".deb"):
+                hostname = urlparse(self.path).hostname
+                cache = archives / hostname / path.name
+                with flock(lock_file):
+                    if cache.exists():
+                        self.send_data(cache.read_bytes(), deb=True)
+                    else: self.cache_and_stream_data(cache)
+
+            else: self.send_data(urlopen(self.path).read())
+
+        except Exception as e:
+            self.send_error(502, str(e))
+
+        finally:
+            idle_timer = threading.Timer(idle_timeout, server.shutdown)
+            idle_timer.start()
+
+class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
+    pass
+
+if os.environ.get("LISTEN_FDS", 0):
+    sock = socket.fromfd(3, socket.AF_INET, socket.SOCK_STREAM)
+    server = ThreadedHTTPServer((addr, port), Handler, bind_and_activate=False)
+    server.socket = sock
+else:
+    server = ThreadedHTTPServer((addr, port), Handler)
+
+idle_timer = threading.Timer(idle_timeout, server.shutdown)
+idle_timer.start()
+server.serve_forever()

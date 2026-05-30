@@ -1,0 +1,7 @@
+[Unit]
+Description=APT Proxy Clean-up
+
+[Service]
+CacheDirectory=apt/proxy
+DynamicUser=yes
+ExecStart=/usr/local/bin/aprox clean

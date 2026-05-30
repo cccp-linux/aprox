@@ -1,0 +1,9 @@
+[Unit]
+Description=APT Proxy Clean-up Timer
+
+[Timer]
+OnCalendar=daily
+Persistent=true
+
+[Install]
+WantedBy=timers.target

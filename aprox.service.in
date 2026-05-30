@@ -1,0 +1,8 @@
+[Unit]
+Description=APT Proxy
+Requires=aprox.socket
+
+[Service]
+CacheDirectory=apt/proxy
+DynamicUser=yes
+ExecStart=/usr/local/bin/aprox
