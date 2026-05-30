@@ -1,0 +1,15 @@
+Source: aprox
+Section: admin
+Maintainer: Dimitry Ishenko <dimitry.ishenko@gmail.com>
+Build-Depends:
+ debhelper-compat (= 13),
+Standards-Version: 4.7.4
+Vcs-Browser: https://github.com/cccp-linux/aprox
+Vcs-Git: https://github.com/cccp-linux/aprox.git
+
+Package: aprox
+Architecture: all
+Depends:
+ ${misc:Depends},
+ python3:any
+Description: Simple caching apt proxy
