@@ -30,5 +30,4 @@ clean:
 	rm -f $(GENERATED)
 
 %: %.in
-	sed -e 's|@BINDIR@|$(BINDIR)|g' \
-	    -e 's|@SYSCONFDIR@|$(SYSCONFDIR)|g' $< > $@
+	sed -e 's|@BINDIR@|$(BINDIR)|g' $< > $@

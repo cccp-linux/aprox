@@ -1,29 +1,26 @@
 #!/usr/bin/env python3
 
 import contextlib, fcntl, os, socket, sys, threading, time
-from configparser import ConfigParser
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from pathlib import Path
 from socketserver import ThreadingMixIn
 from urllib.parse import urlparse
 from urllib.request import urlopen
 
+####################
+addr, port = "127.0.0.1", 3142
+idle_timeout = 30
+
+archives = Path("/var/cache/apt/proxy")
+archives.mkdir(exist_ok=True)
+lock_file = open(archives / "lock", "w")
+
+####################
 @contextlib.contextmanager
 def flock(f):
     fcntl.flock(f, fcntl.LOCK_EX)
     try: yield
     finally: fcntl.flock(f, fcntl.LOCK_UN)
-
-config = ConfigParser()
-config.read("@SYSCONFDIR@/aprox.conf")
-config = config["main"]
-
-addr, port = config["addr"], int(config["port"])
-idle_timeout = int(config["idle-timeout"])
-
-archives = Path(config["archives"])
-archives.mkdir(exist_ok=True)
-lock_file = open(archives / "lock", "w")
 
 class Handler(BaseHTTPRequestHandler):
     def send_ok(self, deb=False, length=None):
@@ -75,11 +72,18 @@ class Handler(BaseHTTPRequestHandler):
 class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
     pass
 
+####################
 if os.environ.get("LISTEN_FDS", 0):
     sock = socket.fromfd(3, socket.AF_INET, socket.SOCK_STREAM)
     server = ThreadedHTTPServer((addr, port), Handler, bind_and_activate=False)
     server.socket = sock
+
 else:
+    if len(sys.argv) > 1:
+        p1, _, p2 = sys.argv[1].partition(':')
+        addr = p1 or addr
+        port = int(p2) if p2 else port
+    print(f"Listening on {addr}:{port}")
     server = ThreadedHTTPServer((addr, port), Handler)
 
 idle_timer = threading.Timer(idle_timeout, server.shutdown)
