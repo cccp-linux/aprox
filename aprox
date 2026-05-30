@@ -11,7 +11,7 @@ from urllib.request import urlopen
 addr, port = "127.0.0.1", 3142
 idle_timeout = 30
 
-archives = Path("/var/cache/apt/proxy")
+archives = Path(os.environ.get("APROX_ARCHIVES", "/var/cache/apt/proxy"))
 archives.mkdir(exist_ok=True)
 lock_file = open(archives / "lock", "w")
 
