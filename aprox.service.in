@@ -5,4 +5,5 @@ Requires=aprox.socket
 [Service]
 CacheDirectory=apt/proxy
 DynamicUser=yes
+#Environment=CACHE_DIR=/var/cache/apt/proxy
 ExecStart=@BINDIR@/aprox

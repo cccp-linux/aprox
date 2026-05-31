@@ -4,4 +4,6 @@ Description=APT Proxy Clean-up
 [Service]
 CacheDirectory=apt/proxy
 DynamicUser=yes
+#Environment=CACHE_DIR=/var/cache/apt/proxy
+#Environment=KEEP_DAYS=30
 ExecStart=@BINDIR@/aprox-clean
