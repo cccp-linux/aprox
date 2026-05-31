@@ -1,3 +1,11 @@
+aprox (0.2) unstable; urgency=medium
+
+  * Add defaults in .service files
+  * aprox-clean: support custom cutoff time
+  * archives => cache_dir
+
+ -- Dimitry Ishenko <dimitry.ishenko@gmail.com>  Sat, 30 May 2026 22:15:23 -0400
+
 aprox (0.1) unstable; urgency=medium
 
   * d/rules: explicit prefix
