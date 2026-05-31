@@ -4,11 +4,11 @@ import os
 from pathlib import Path
 from time import time
 
-archives = Path(os.environ.get("APROX_ARCHIVES", "/var/cache/apt/proxy"))
+cache_dir = Path(os.environ.get("CACHE_DIR", "/var/cache/apt/proxy"))
 cutoff = time() - 30 * 86400
 
-if archives.is_dir():
-    for f in archives.rglob("*.deb"):
+if cache_dir.is_dir():
+    for f in cache_dir.rglob("*.deb"):
         if f.stat().st_mtime < cutoff:
-            print(f.relative_to(archives))
+            print(f.relative_to(cache_dir))
             f.unlink()

@@ -11,9 +11,9 @@ from urllib.request import urlopen
 addr, port = "127.0.0.1", 3142
 idle_timeout = 30
 
-archives = Path(os.environ.get("APROX_ARCHIVES", "/var/cache/apt/proxy"))
-archives.mkdir(exist_ok=True)
-lock_file = open(archives / "lock", "w")
+cache_dir = Path(os.environ.get("CACHE_DIR", "/var/cache/apt/proxy"))
+cache_dir.mkdir(exist_ok=True)
+lock_file = open(cache_dir / "lock", "w")
 
 ####################
 @contextlib.contextmanager
@@ -54,7 +54,7 @@ class Handler(BaseHTTPRequestHandler):
             data = urlparse(self.path)
             path = Path(data.path)
             if deb := (path.suffix == ".deb"):
-                cache = archives / data.hostname / path.name
+                cache = cache_dir / data.hostname / path.name
                 with flock(lock_file):
                     if cache.exists():
                         self.send_data(cache.read_bytes(), deb=True)
