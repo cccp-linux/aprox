@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import contextlib, fcntl, os, socket, sys, threading
+import os, socket, sys, threading
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from pathlib import Path
 from socketserver import ThreadingMixIn
@@ -12,19 +12,19 @@ from urllib.request import urlopen
 addr, port = "127.0.0.1", 3142
 idle_timeout = 30
 
+cache_dir = Path(os.environ.get("CACHE_DIR", "/var/cache/apt/proxy"))
+cache_dir.mkdir(exist_ok=True)
+
 active = 0
 active_guard = threading.Lock()
 
-cache_dir = Path(os.environ.get("CACHE_DIR", "/var/cache/apt/proxy"))
-cache_dir.mkdir(exist_ok=True)
-lock_file = open(cache_dir / "lock", "w")
+locked = {}
+locked_guard = threading.Lock()
 
 ####################
-@contextlib.contextmanager
-def flock(f):
-    fcntl.flock(f, fcntl.LOCK_EX)
-    try: yield
-    finally: fcntl.flock(f, fcntl.LOCK_UN)
+def lock_for(cache):
+    with locked_guard:
+        return locked.setdefault(cache, threading.Lock())
 
 class Handler(BaseHTTPRequestHandler):
     def log_message(self, fmt, *args):
@@ -70,9 +70,13 @@ class Handler(BaseHTTPRequestHandler):
             path = Path(data.path)
             if path.suffix == ".deb":
                 cache = cache_dir / data.hostname / path.name
-                with flock(lock_file):
-                    if cache.exists(): self.send_cached_deb(cache)
-                    else: self.send_and_cache_deb(cache)
+
+                if cache.exists(): self.send_cached_deb(cache)
+                else:
+                    with lock_for(cache):
+                        if cache.exists(): self.send_cached_deb(cache)
+                        else: self.send_and_cache_deb(cache)
+
             else: self.send_non_deb()
 
         except (BrokenPipeError, ConnectionResetError):
