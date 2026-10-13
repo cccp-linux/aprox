@@ -40,12 +40,16 @@ class Handler(BaseHTTPRequestHandler):
         cache.parent.mkdir(parents=True, exist_ok=True)
         temp = cache.with_suffix(".partial")
         with urlopen(self.path) as resp:
-            self.send_ok(deb=True, length=resp.headers.get("Content-Length"))
+            length = int(resp.headers.get("Content-Length"))
+            self.send_ok(deb=True, length=length)
             with open(temp, "wb") as fp:
                 try:
                     while chunk := resp.read(65536):
                         fp.write(chunk)
                         self.wfile.write(chunk)
+                        length -= len(chunk)
+                    if length: raise IOError("incomplete")
+
                 except: temp.unlink()
                 else: temp.rename(cache)
 
