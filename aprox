@@ -99,10 +99,9 @@ class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
     pass
 
 ####################
-if os.environ.get("LISTEN_FDS", 0):
-    sock = socket.fromfd(3, socket.AF_INET, socket.SOCK_STREAM)
+if int(os.environ.get("LISTEN_FDS", 0)) > 0:
     server = ThreadedHTTPServer((addr, port), Handler, bind_and_activate=False)
-    server.socket = sock
+    server.socket = socket.socket(fileno=3)
 
 else:
     if len(sys.argv) > 1:
