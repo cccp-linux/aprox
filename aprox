@@ -12,6 +12,9 @@ from urllib.request import urlopen
 addr, port = "127.0.0.1", 3142
 idle_timeout = 30
 
+active = 0
+active_guard = threading.Lock()
+
 cache_dir = Path(os.environ.get("CACHE_DIR", "/var/cache/apt/proxy"))
 cache_dir.mkdir(exist_ok=True)
 lock_file = open(cache_dir / "lock", "w")
@@ -57,8 +60,10 @@ class Handler(BaseHTTPRequestHandler):
             while chunk := resp.read(65536): self.wfile.write(chunk)
 
     def do_GET(self):
-        global idle_timer
-        idle_timer.cancel()
+        global active, active_guard, idle_timer
+        with active_guard:
+            active += 1
+            idle_timer.cancel()
 
         try:
             data = urlparse(self.path)
@@ -80,8 +85,11 @@ class Handler(BaseHTTPRequestHandler):
             self.send_error(502, str(e))
 
         finally:
-            idle_timer = threading.Timer(idle_timeout, server.shutdown)
-            idle_timer.start()
+            with active_guard:
+                active -= 1
+                if not active:
+                    idle_timer = threading.Timer(idle_timeout, server.shutdown)
+                    idle_timer.start()
 
 class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
     pass
