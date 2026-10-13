@@ -4,6 +4,7 @@ import contextlib, fcntl, os, socket, sys, threading
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from pathlib import Path
 from socketserver import ThreadingMixIn
+from urllib.error import HTTPError
 from urllib.parse import urlparse
 from urllib.request import urlopen
 
@@ -67,6 +68,9 @@ class Handler(BaseHTTPRequestHandler):
 
         except (BrokenPipeError, ConnectionResetError):
             pass # client disconnected
+
+        except HTTPError as e:
+            self.send_error(e.code)
 
         except Exception as e:
             self.send_error(502, str(e))
