@@ -1,3 +1,16 @@
+aprox (0.3) unstable; urgency=medium
+
+  * aprox: don't cache incomplete downloads
+  * aprox: simpler socket syntax
+  * aprox: fix multiple access
+  * aprox: don't timeout prematurely
+  * aprox: stream headers and cached files
+  * aprox: forward http errors
+  * aprox: ignore client disconnect
+  * aprox: journald will show timestamps
+
+ -- Dimitry Ishenko <dimitry.ishenko@gmail.com>  Tue, 13 Oct 2026 18:05:56 -0400
+
 aprox (0.2) unstable; urgency=medium
 
   * Add defaults in .service files
