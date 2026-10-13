@@ -65,6 +65,9 @@ class Handler(BaseHTTPRequestHandler):
 
             else: self.send_data(urlopen(self.path).read())
 
+        except (BrokenPipeError, ConnectionResetError):
+            pass # client disconnected
+
         except Exception as e:
             self.send_error(502, str(e))
 
