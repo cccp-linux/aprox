@@ -1,3 +1,10 @@
+aprox (0.4) unstable; urgency=medium
+
+  * aprox-clean: remove empty dirs
+  * aprox: keep structure
+
+ -- Dimitry Ishenko <dimitry.ishenko@gmail.com>  Sat, 07 Nov 2026 20:00:17 -0500
+
 aprox (0.3) unstable; urgency=medium
 
   * aprox: don't cache incomplete downloads
