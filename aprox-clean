@@ -5,10 +5,14 @@ from pathlib import Path
 from time import time
 
 cache_dir = Path(os.environ.get("CACHE_DIR", "/var/cache/apt/proxy"))
-cutoff = time() - 86400 * int(os.environ.get("KEEP_DAYS", 30))
-
 if cache_dir.is_dir():
+    (cache_dir / ".hold").touch()
+
+    cutoff = time() - 86400 * int(os.environ.get("KEEP_DAYS", 30))
     for f in cache_dir.rglob("*.deb"):
-        if f.stat().st_mtime < cutoff:
-            print(f.relative_to(cache_dir))
-            f.unlink()
+        try:
+            if f.stat().st_mtime < cutoff:
+                print(f.relative_to(cache_dir))
+                f.unlink()
+                os.removedirs(f.parent)
+        except: pass
