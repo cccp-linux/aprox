@@ -71,9 +71,8 @@ class Handler(BaseHTTPRequestHandler):
 
         try:
             data = urlparse(self.path)
-            path = Path(data.path)
-            if path.suffix == ".deb":
-                cache = cache_dir / data.hostname / path.name
+            if data.path.endswith(".deb"):
+                cache = cache_dir / (data.hostname + data.path)
 
                 if cache.exists(): self.send_cached_deb(cache)
                 else:
