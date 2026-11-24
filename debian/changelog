@@ -1,3 +1,9 @@
+aprox (0.5) unstable; urgency=medium
+
+  * aprox: set User-Agent
+
+ -- Dimitry Ishenko <dimitry.ishenko@gmail.com>  Mon, 23 Nov 2026 21:33:25 -0500
+
 aprox (0.4) unstable; urgency=medium
 
   * aprox-clean: remove empty dirs
