@@ -6,7 +6,7 @@ from pathlib import Path
 from socketserver import ThreadingMixIn
 from urllib.error import HTTPError
 from urllib.parse import urlparse
-from urllib.request import urlopen
+from urllib.request import Request, urlopen
 
 ####################
 addr, port = "127.0.0.1", 3142
@@ -22,6 +22,10 @@ locked = {}
 locked_guard = threading.Lock()
 
 ####################
+def fetch(url, headers):
+    agent = headers.get("User-Agent", "Debian APT-HTTP/1.3")
+    return urlopen(Request(url, headers={"User-Agent": agent}))
+
 def lock_for(cache):
     with locked_guard:
         return locked.setdefault(cache, threading.Lock())
@@ -39,7 +43,7 @@ class Handler(BaseHTTPRequestHandler):
     def send_and_cache_deb(self, cache):
         cache.parent.mkdir(parents=True, exist_ok=True)
         temp = cache.with_suffix(".partial")
-        with urlopen(self.path) as resp:
+        with fetch(self.path, self.headers) as resp:
             length = int(resp.headers.get("Content-Length"))
             self.send_ok(deb=True, length=length)
             with open(temp, "wb") as fp:
@@ -59,7 +63,7 @@ class Handler(BaseHTTPRequestHandler):
             while chunk := fp.read(65536): self.wfile.write(chunk)
 
     def send_non_deb(self):
-        with urlopen(self.path) as resp:
+        with fetch(self.path, self.headers) as resp:
             self.send_ok(length=resp.headers.get("Content-Length"))
             while chunk := resp.read(65536): self.wfile.write(chunk)
 
